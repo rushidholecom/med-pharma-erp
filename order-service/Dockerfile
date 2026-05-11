@@ -3,7 +3,7 @@ WORKDIR /app
 RUN git clone https://github.com/rushidholecom/med-pharma-erp.git
 
 WORKDIR /order-service
-
+COPY . .
 RUN mvn clean package -DskipTests
 
 FROM alpine/java:21-jre
@@ -11,5 +11,5 @@ FROM alpine/java:21-jre
 WORKDIR /app
 
 COPY --from=build /app/order-service/target/order-service-0.0.1-SNAPSHOT.jar order-service.jar 
-EXPOSE 8080
+EXPOSE 8083
 ENTRYPOINT ["java", "-jar", "order-service.jar"]
