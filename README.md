@@ -1,134 +1,211 @@
-# EduBlitz Medical B2B ERP System
+# Medical B2B ERP System
 
-A production-grade **Medical Domain B2B ERP** for hospitals, distributors, and administrators. The stack is **three Spring Boot microservices**, a **React (Vite)** SPA, and **MongoDB** (Atlas or self-hosted).
+A production-grade Medical Domain B2B ERP platform designed for hospitals, distributors, and medical vendors. This project follows a modern microservices architecture with containerized deployment using Docker and Docker Compose.
 
-## Architecture Overview
+---
 
+# Project Overview
+
+The system is built with 3 independent Spring Boot microservices and a React frontend. Each microservice has its own dedicated MongoDB database following microservices best practices.
+
+## Features
+
+- User authentication & authorization
+- Product and inventory management
+- Order processing and billing workflow
+- Role-based access control
+- Containerized deployment
+- Cloud-ready scalable architecture
+
+---
+
+# Architecture Overview
+
+```text
+                        React Frontend
+                 (Vite + TailwindCSS)
+
+                               │
+                               │
+                    Docker Compose Network
+                               │
+
+        ┌─────────────────────────────────────┐
+        │                                     │
+        │         Microservices Layer         │
+        │                                     │
+        └─────────────────────────────────────┘
+
+       ┌───────────────────────────────────────────┐
+       │                                           │
+       │              user-service                 │
+       │                 Port: 8081                │
+       │         Authentication / JWT / RBAC       │
+       │                                           │
+       └───────────────────────────────────────────┘
+
+       ┌───────────────────────────────────────────┐
+       │                                           │
+       │             product-service               │
+       │                Port: 8082                 │
+       │         Product & Inventory System        │
+       │                                           │
+       └───────────────────────────────────────────┘
+
+       ┌───────────────────────────────────────────┐
+       │                                           │
+       │              order-service                │
+       │                Port: 8083                 │
+       │          Orders & Billing Workflow        │
+       │                                           │
+       └───────────────────────────────────────────┘
+
+                               │
+                               │
+
+                     MongoDB Atlas Cluster
+
+          users_db      products_db      orders_db
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CloudFront CDN                           │
-│                    (React Frontend via S3)                      │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────────┐
-│              AWS ALB Ingress Controller (EKS)                   │
-└──────┬─────────────────────┬──────────────────────┬─────────────┘
-       │                     │                      │
-┌──────▼──────┐    ┌─────────▼────────┐   ┌────────▼────────┐
-│ user-service│    │ product-service  │   │  order-service  │
-│  Port: 8081 │    │   Port: 8082     │   │   Port: 8083    │
-│             │    │                  │   │                 │
-│ Auth / JWT  │    │ Catalog / Stock  │   │ Order lifecycle │
-│ Roles/Orgs  │    │ Batches / Reserve│   │ (+ product API) │
-└──────┬──────┘    └─────────┬────────┘   └────────┬────────┘
-       │                     │                      │
-┌──────▼─────────────────────▼──────────────────────▼─────────────┐
-│                     MongoDB Atlas (or local)                      │
-│   users_db          products_db            orders_db             │
-└───────────────────────────────────────────────────────────────────┘
-```
 
-## Tech Stack
+---
 
-| Layer        | Technology                                      |
-|--------------|-------------------------------------------------|
-| Frontend     | React 18 + Vite + TailwindCSS + TanStack Query  |
-| Backend      | Spring Boot 3.x (3 microservices)               |
-| Database     | MongoDB (Atlas recommended)                     |
-| Auth         | JWT (HMAC-SHA256 / HS256), shared secret        |
-| Cloud        | AWS (EKS, S3, CloudFront, Route53) — optional   |
-| IaC          | Terraform (modular)                             |
-| CI/CD        | Jenkins (see `jenkins/`)                        |
-| Containers   | Docker + Kubernetes manifests in `k8s/`        |
-| API Docs     | Swagger / OpenAPI 3.0 per service               |
+# Tech Stack
 
-## Domain Highlights
+| Layer | Technology |
+|---|---|
+| Frontend | React 18 + Vite + TailwindCSS |
+| Backend | Spring Boot 3.x |
+| Database | MongoDB Atlas |
+| Authentication | JWT |
+| Containers | Docker |
+| Orchestration | Docker Compose |
+| API Testing | Postman |
+| Build Tool | Maven |
+| Reverse Proxy | Nginx |
 
-- **Catalog**: Active products only appear in hospital/distributor listings; soft-deleted products free their **SKU** for reuse.
-- **Inventory**: Stock is tracked per **product + warehouse + batch** (`POST /products/inventory`). **Available** (sellable) = stored quantity minus reserved.
-- **Orders**: Hospitals place orders; **distributors** (or admins) **approve** only when enough sellable stock exists — approval calls product-service to **reserve** stock (multi-batch allocation). Distributors only act on orders assigned to their **organization ID**.
-- **Admin UI**: Organization **MongoDB IDs** are listed under **Organizations** for integration and user registration.
+---
 
-## Services
+# Microservices
 
-| Service         | Port | Responsibilities |
-|-----------------|------|------------------|
-| user-service    | 8081 | Auth, JWT, users, organizations, audit hooks |
-| product-service | 8082 | Products, inventory batches, reserve/release APIs |
-| order-service   | 8083 | Orders; calls product-service over HTTP with forwarded JWT |
+| Service | Port | Responsibilities |
+|---|---|---|
+| user-service | 8081 | Authentication, JWT, User Management |
+| product-service | 8082 | Product Catalog, Inventory Management |
+| order-service | 8083 | Orders, Billing, Order Tracking |
 
-## Roles
+---
 
-| Role        | Access |
-|-------------|--------|
-| ADMIN       | Organizations, all products/inventory (scoped APIs), all orders |
-| DISTRIBUTOR | Own catalog & stock batches, incoming orders for own org |
-| HOSPITAL    | Browse catalog, create/track own org’s orders |
+# Project Structure
 
-## Project Structure
-
-```
-├── frontend/           # React + Vite (HashRouter for static hosting)
+```text
+med-pharma-erp/
+│
+├── frontend/
+│
 ├── user-service/
+│   ├── src/main
+│   ├── Dockerfile
+│   └── pom.xml
+│
 ├── product-service/
+│   ├── src/main
+│   ├── Dockerfile
+│   └── pom.xml
+│
 ├── order-service/
-├── docker/
-├── k8s/
-├── terraform/
-├── jenkins/
-└── docs/               # Deployment & architecture guides
+│   ├── src/main
+│   ├── Dockerfile
+│   └── pom.xml
+│
+├── docker-compose.yml
+│
+└── README.md
 ```
 
-## Documentation
+---
 
-| Document | Description |
-|----------|-------------|
-| [docs/README.md](docs/README.md) | Index of all guides |
-| [docs/MANUAL_DEPLOYMENT.md](docs/MANUAL_DEPLOYMENT.md) | Run services locally without Docker |
-| [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md) | Docker Compose |
-| [docs/KUBERNETES_DEPLOYMENT.md](docs/KUBERNETES_DEPLOYMENT.md) | Kubernetes / EKS |
-| [docs/TERRAFORM_DEPLOYMENT.md](docs/TERRAFORM_DEPLOYMENT.md) | AWS infrastructure |
-| [docs/JENKINS_DEPLOYMENT.md](docs/JENKINS_DEPLOYMENT.md) | CI/CD pipelines |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Service boundaries & data flows |
+# Docker Deployment
 
-## Quick Start
-
-1. **Local (no Docker):** [MANUAL_DEPLOYMENT.md](docs/MANUAL_DEPLOYMENT.md) — use app URLs with `/#/` (HashRouter), e.g. `http://localhost:5173/#/login`.
-2. **Docker Compose ([DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)):** runs **user, product, and order** APIs only; uses **MongoDB Atlas** via `.env`; the **frontend is deployed separately** (S3 + CloudFront).
-3. **Kubernetes:** [KUBERNETES_DEPLOYMENT.md](docs/KUBERNETES_DEPLOYMENT.md)
-4. **Terraform (AWS):** [TERRAFORM_DEPLOYMENT.md](docs/TERRAFORM_DEPLOYMENT.md)
-
-## Prerequisites
-
-- Java 17+
-- Node.js 18+
-- Docker & Docker Compose (optional)
-- MongoDB 6+ (or Atlas)
-- **Same `JWT_SECRET` (Base64-encoded key bytes)** on every service that validates JWTs — see each service’s `.env.example`.
-
-## Environment Variables
-
-Copy `.env.example` → `.env` in each service and in `frontend` (e.g. `.env.local`). Never commit real secrets.
-
-## Security Notes
-
-- APIs are authenticated with Bearer JWT except documented public auth routes.
-- **order-service → product-service** uses HTTP + forwarded JWT (no direct DB access across services).
-- Use Kubernetes Secrets / AWS Secrets Manager in production.
-- Jenkins pipelines may run **SonarCloud** and **Trivy** when credentials are configured (`jenkins/`).
-
-## Development
+## Build Containers
 
 ```bash
-# Frontend
-cd frontend && npm install && npm run dev
-npm run lint && npm run build   # ESLint config: .eslintrc.cjs
-
-# Each backend
-cd user-service && mvn clean compile
+docker compose build
 ```
 
-## License
+## Start All Services
 
-Proprietary — **Edublitz — Powered by Greamio Technologies Pvt Ltd.**  
-See the [LICENSE](LICENSE) file for the full notice. All rights reserved.
+```bash
+docker compose up -d
+```
+
+## Stop Services
+
+```bash
+docker compose down
+```
+
+## View Running Containers
+
+```bash
+docker ps
+```
+
+---
+
+# Environment Variables
+
+Example:
+
+```env
+SPRING_DATA_MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/users_db
+JWT_SECRET=your_secret_key
+SERVER_PORT=8081
+```
+
+---
+
+# MongoDB Databases
+
+| Service | Database |
+|---|---|
+| user-service | users_db |
+| product-service | products_db |
+| order-service | orders_db |
+
+---
+
+# Frontend Build
+
+```bash
+npm install
+npm run build
+```
+
+---
+
+# Security
+
+- JWT Authentication
+- Role-Based Access Control (RBAC)
+- Environment Variable Protection
+- Secure MongoDB Atlas Connection
+- Containerized Isolation
+
+---
+
+# Future Improvements
+
+- Kubernetes Deployment
+- Jenkins CI/CD Pipeline
+- Terraform Infrastructure
+- Monitoring & Logging
+- API Gateway Integration
+
+---
+
+# Author
+
+Rushi Dhole
+
+GitHub: https://github.com/rushidholecom
