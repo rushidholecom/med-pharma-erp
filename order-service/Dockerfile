@@ -10,6 +10,6 @@ FROM alpine/java:21-jre
 
 WORKDIR /app
 
-COPY --from=build /med-pharma-erp/order-service/target/order-service*.jar ./order-service.jar 
+    COPY --from=build target/order-service*.jar ./order-service.jar 
 EXPOSE 8083
 ENTRYPOINT ["java", "-jar", "order-service.jar"]
