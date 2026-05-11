@@ -6,7 +6,7 @@ WORKDIR /order-service
 
 RUN mvn clean package -DskipTests
 
-FROM openjdk:21-jre-slim
+FROM openjre:21-jre-slim
 
 WORKDIR /app
 
