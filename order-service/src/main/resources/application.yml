@@ -39,6 +39,6 @@ cors:
 
 services:
   product-service:
-    base-url: ${PRODUCT_SERVICE_URL:http://localhost:8082/api/v1}
+    base-url: ${PRODUCT_SERVICE_URL:http://18.170.69.153:8082/api/v1}
   user-service:
-    base-url: ${USER_SERVICE_URL:http://localhost:8081/api/v1}
+    base-url: ${USER_SERVICE_URL:http://18.170.69.153:8081/api/v1}
