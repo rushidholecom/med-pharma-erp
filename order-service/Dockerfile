@@ -6,7 +6,7 @@ WORKDIR /order-service
 
 RUN mvn clean package -DskipTests
 
-FROM openjre:21-jre-slim
+FROM alpine/java:21-jre
 
 WORKDIR /app
 
