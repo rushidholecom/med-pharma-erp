@@ -1,15 +1,13 @@
-FROM jelastic/maven:3.9.5-openjdk-21 AS build
-WORKDIR /app
-RUN git clone https://github.com/rushidholecom/med-pharma-erp.git
+FROM maven:3.8.3-openjdk-17 AS build
 
-WORKDIR /order-service
 COPY . .
+
 RUN mvn clean package -DskipTests
 
-FROM alpine/java:21-jre
+FROM eclipse-temurin:17-jre-alpine
 
-WORKDIR /app
+COPY --from=build target/order-service*.jar ./app.jar
 
-    COPY --from=build target/order-service*.jar ./order-service.jar 
 EXPOSE 8083
-ENTRYPOINT ["java", "-jar", "order-service.jar"]
+
+ENTRYPOINT [ "java", "-jar", "app.jar"]
